@@ -21,10 +21,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/nats-io/nats.go"
 	nethttp "net/http"
 	"sync"
-
-	"github.com/nats-io/nats.go"
 
 	cejs "github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2"
 	ce "github.com/cloudevents/sdk-go/v2"
@@ -218,6 +217,12 @@ func (d *Dispatcher) ReconcileConsumers(ctx context.Context, config ChannelConfi
 }
 
 func (d *Dispatcher) updateSubscription(ctx context.Context, config ChannelConfig, sub Subscription, isLeader bool) error {
+	// if consumer has changed from push to pull based
+	// add a new JS consumer, set OptStartSeq=oldConsumerInfo.AckFloor.Consumer
+	// stop push based consumer
+	// start pull based consumer
+	// Possible consequences: may end up in duplicate messages delivered, so target services should be idempotent!
+
 	logger := logging.FromContext(ctx)
 	d.consumers[sub.UID].UpdateSubscription(&config, sub)
 	consumerName := d.consumerNameFunc(string(sub.UID))
