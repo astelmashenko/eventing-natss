@@ -28,8 +28,6 @@ import (
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 
-	"knative.dev/pkg/logging"
-
 	brokerutils "knative.dev/eventing-natss/pkg/broker/utils"
 	commonce "knative.dev/eventing-natss/pkg/common/cloudevents"
 	"knative.dev/eventing-natss/pkg/tracing"
@@ -114,10 +112,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // publishToJetStream publishes a CloudEvent to the broker's JetStream stream
 func (h *Handler) publishToJetStream(ctx context.Context, event *ce.Event) error {
-	logger := logging.FromContext(ctx)
-	if logger == nil {
-		logger = h.logger
-	}
+	logger := h.logger
 
 	// Convert event to binding message
 	message := binding.ToMessage(event)
