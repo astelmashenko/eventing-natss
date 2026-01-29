@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
@@ -110,8 +111,10 @@ func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 	go func() {
 		<-ctx.Done()
 		logger.Info("Shutting down HTTP server")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		server.Shutdown(ctx)
 		natsConn.Close()
-		server.Shutdown(context.Background())
 	}()
 
 	// Create a no-op controller impl since ingress doesn't reconcile any resources
