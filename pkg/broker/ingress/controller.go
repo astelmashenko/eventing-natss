@@ -33,6 +33,14 @@ import (
 	commonnats "knative.dev/eventing-natss/pkg/common/nats"
 )
 
+// todo: Make these confgurable when migrate to shared ingress
+const (
+	// HTTP server timeouts
+	httpReadTimeout  = 30 * time.Second
+	httpWriteTimeout = 30 * time.Second
+	httpIdleTimeout  = 120 * time.Second
+)
+
 type envConfig struct {
 	BrokerName string `envconfig:"BROKER_NAME" required:"true"`
 	Namespace  string `envconfig:"BROKER_NAMESPACE" required:"true"`
@@ -95,8 +103,11 @@ func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 	mux.HandleFunc("/readyz", handler.ReadinessChecker())
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", env.Port),
-		Handler: mux,
+		Addr:         fmt.Sprintf(":%d", env.Port),
+		Handler:      mux,
+		ReadTimeout:  httpReadTimeout,
+		WriteTimeout: httpWriteTimeout,
+		IdleTimeout:  httpIdleTimeout,
 	}
 
 	// Start HTTP server in background
