@@ -112,14 +112,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // publishToJetStream publishes a CloudEvent to the broker's JetStream stream
 func (h *Handler) publishToJetStream(ctx context.Context, event *ce.Event) error {
-	logger := h.logger
+	logger := h.logger.With(zap.String("msg_id", event.ID()))
 
 	// Convert event to binding message
 	message := binding.ToMessage(event)
 
-	// Extract event ID for deduplication
+	// Extract event ID for deduplication (populated by Transform() during WriteMsg)
 	eventID := commonce.IDExtractorTransformer("")
-	logger = logger.With(zap.String("msg_id", string(eventID)))
 	transformers := append([]binding.Transformer{&eventID},
 		tracing.SerializeTraceTransformers(ctx)...,
 	)
